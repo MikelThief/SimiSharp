@@ -6,7 +6,7 @@ namespace SimiSharp.Core
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine(value: "Hello World!");
         }
     }
 }

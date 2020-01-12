@@ -22,18 +22,18 @@ namespace SimiSharp.CodeAnalysis.ReferenceResolvers
 	{
 		public static IEnumerable<IGrouping<ISymbol, ReferenceLocation>> Resolve(this Compilation compilation, SyntaxNode root)
 		{
-			var model = compilation.GetSemanticModel(syntaxTree: root.SyntaxTree);
+			var model = compilation.GetSemanticModel(root.SyntaxTree);
 
 			var fields = root.DescendantNodes()
 				.Select(
-					selector: descendant =>
+					descendant =>
 					{
-						var symbol = model.GetSymbolInfo(node: descendant);
-						return new KeyValuePair<ISymbol, SyntaxNode>(key: symbol.Symbol, value: descendant);
+						var symbol = model.GetSymbolInfo(descendant);
+						return new KeyValuePair<ISymbol, SyntaxNode>(symbol.Symbol, descendant);
 					})
-				.Where(predicate: x => x.Key != null)
-				.SelectMany(selector: x => GetSymbolDetails(x: x, model: model))
-				.GroupBy(keySelector: x => x.Symbol, elementSelector: x => x.Location);
+				.Where(x => x.Key != null)
+				.SelectMany(x => GetSymbolDetails(x, model))
+				.GroupBy(x => x.Symbol, x => x.Location);
 
 			var array = fields.AsArray();
 
@@ -42,19 +42,19 @@ namespace SimiSharp.CodeAnalysis.ReferenceResolvers
 
 		private static IEnumerable<SymbolDetails> GetSymbolDetails(KeyValuePair<ISymbol, SyntaxNode> x, SemanticModel model)
 		{
-			var containingType = ResolveContainingType(node: x.Value, model: model);
-			yield return new SymbolDetails(symbol: x.Key, location: new ReferenceLocation(location: x.Value.GetLocation(), referencingType: containingType, model: model));
+			var containingType = ResolveContainingType(x.Value, model);
+			yield return new SymbolDetails(x.Key, new ReferenceLocation(x.Value.GetLocation(), containingType, model));
 
 			var namedType = x.Key as INamedTypeSymbol;
-			if (namedType != null && namedType.ConstructedFrom != null && namedType.ConstructedFrom != x.Key)
+			if (namedType != null && namedType.ConstructedFrom != null && !SymbolEqualityComparer.Default.Equals(namedType.ConstructedFrom, x.Key))
 			{
-				yield return new SymbolDetails(symbol: namedType.ConstructedFrom, location: new ReferenceLocation(location: x.Value.GetLocation(), referencingType: containingType, model: model));
+				yield return new SymbolDetails(namedType.ConstructedFrom, new ReferenceLocation(x.Value.GetLocation(), containingType, model));
 			}
 
 			var namedMethod = x.Key as IMethodSymbol;
-			if (namedMethod != null && namedMethod.ConstructedFrom != null && namedMethod.ConstructedFrom != x.Key)
+			if (namedMethod != null && namedMethod.ConstructedFrom != null && !SymbolEqualityComparer.Default.Equals(namedMethod.ConstructedFrom, x.Key))
 			{
-				yield return new SymbolDetails(symbol: namedMethod, location: new ReferenceLocation(location: x.Value.GetLocation(), referencingType: ResolveContainingType(node: x.Value, model: model), model: model));
+				yield return new SymbolDetails(namedMethod, new ReferenceLocation(x.Value.GetLocation(), ResolveContainingType(x.Value, model), model));
 			}
 		}
 
@@ -68,11 +68,11 @@ namespace SimiSharp.CodeAnalysis.ReferenceResolvers
 			var parent = node.Parent;
 			if (parent is BaseTypeDeclarationSyntax)
 			{
-				var symbolInfo = model.GetDeclaredSymbol(declaration: parent);
+				var symbolInfo = model.GetDeclaredSymbol(parent);
 				return symbolInfo as ITypeSymbol;
 			}
 
-			return ResolveContainingType(node: parent, model: model);
+			return ResolveContainingType(parent, model);
 		}
 
 		private class SymbolDetails

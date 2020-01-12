@@ -110,7 +110,7 @@ namespace SimiSharp.CodeAnalysis.Metrics
                 .Cast<ITypeSymbol>()
                 .WhereNotNull()
                 .DistinctBy(func: x => x.ToDisplayString())
-                .Count(predicate: x => !x.Equals(other: sourceSymbol));
+                .Count(predicate: x => !SymbolEqualityComparer.Default.Equals(x, sourceSymbol));
 
             return members;
         }

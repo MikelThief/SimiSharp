@@ -69,7 +69,7 @@ namespace SimiSharp.CodeReview.Rules.Semantic
 			var method = semanticModel.GetSymbolInfo(expression: invocationExpression.Expression).Symbol as IMethodSymbol;
 			return method != null
 				&& (method.IsAbstract || method.IsVirtual)
-				&& method.ContainingType == containingType;
+				&& SymbolEqualityComparer.Default.Equals(x: method.ContainingType, y: containingType);
 		}
 	}
 }

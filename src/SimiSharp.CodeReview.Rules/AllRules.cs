@@ -35,7 +35,7 @@ namespace SimiSharp.CodeReview.Rules
 					predicate: x =>
 					x.GetConstructors()
 						.Any(
-							predicate: c => c.GetParameters().Length == 1 && typeof(ISpellChecker).IsAssignableFrom(c: c.GetParameters()[index0: 0].ParameterType)))
+							predicate: c => c.GetParameters().Length == 1 && typeof(ISpellChecker).IsAssignableFrom(c: c.GetParameters()[0].ParameterType)))
 					.Select(selector: x => Activator.CreateInstance(type: x, spellChecker))
 					.Cast<ISyntaxEvaluation>();
 

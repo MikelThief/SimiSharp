@@ -71,7 +71,7 @@ namespace SimiSharp.CodeReview.Rules.Semantic
 			var locals = usedTypes.Except(second: parameterTypes);
 			if (locals.Any(predicate: x =>
 				x.ContainingAssembly == null ||
-				(!x.ContainingAssembly.Equals(other: semanticModel.Compilation.Assembly)
+				(!SymbolEqualityComparer.Default.Equals(x: x.ContainingAssembly, y: semanticModel.Compilation.Assembly)
 				&& !parameterAssemblies.Contains(value: x.ContainingAssembly)
 				&& !SystemAssemblyPrefixes.Any(predicate: y => x.ContainingAssembly.Name.StartsWith(value: y)))))
 			{

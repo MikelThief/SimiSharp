@@ -85,7 +85,7 @@ namespace SimiSharp.CodeReview.Rules.Semantic
 				.Cast<ITypeSymbol>()
 				.WhereNotNull()
 				.DistinctBy(func: x => x.ToDisplayString())
-				.Where(predicate: x => x != sourceSymbol)
+				.Where(predicate: x => !SymbolEqualityComparer.Default.Equals(x: x, y: sourceSymbol))
 				.AsArray();
 
 			return members;

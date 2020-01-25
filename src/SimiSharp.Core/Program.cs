@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using F23.StringSimilarity;
 using PowerArgs;
 using Testura.Code.Compilations;
 
@@ -29,6 +32,8 @@ namespace SimiSharp.Core
         private FileInfo AnalyzedBinary { get; set; }
         private FileInfo DecompiledReference { get; set; }
         private FileInfo DecompiledAnalyzed { get; set; }
+        private FileInfo CleansedReference { get; set; }
+        private FileInfo CleansedAnalyzed { get; set; }
 
         /// <summary>
         /// EntryPoint
@@ -38,6 +43,57 @@ namespace SimiSharp.Core
             CreateWorkspace();
             CompileFiles();
             GenerateIL();
+            CleanseIL();
+            Compare();
+        }
+
+        private void Compare()
+        {
+            var reference = string.Join(separator: ' ', File.ReadAllLines(path: CleansedReference.FullName));
+            var analyzed = string.Join(separator: ' ', File.ReadAllLines(path: CleansedAnalyzed.FullName));
+
+            var damerau = new JaroWinkler(0.01);
+            var l = 1 - damerau.Distance(s1: reference, s2: analyzed);
+        }
+
+        private void CleanseIL()
+        {
+            var selectedReferenceLines = File.ReadAllLines(path: DecompiledReference.FullName, Encoding.UTF8)
+                .Where(x => x.Contains(value: "IL_", StringComparison.InvariantCulture))
+                .Select(x =>
+                {
+                    x = x.Remove(startIndex: 0, count: 14);
+
+                    if (x.Contains(' ', StringComparison.InvariantCulture))
+                    {
+                        var strs = x.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        x = strs[0];
+                    }
+
+                    return x;
+                });
+
+            var cleansedReferencePath = DecompiledReference.FullName.Replace(oldValue: ".il", newValue: "_cls.txt", StringComparison.InvariantCulture);
+            File.WriteAllLines(path: cleansedReferencePath, selectedReferenceLines, Encoding.UTF8);
+            CleansedReference = new FileInfo(fileName: cleansedReferencePath);
+
+            var selectedRAnalyzedLines = File.ReadAllLines(path: DecompiledAnalyzed.FullName, Encoding.UTF8)
+                .Where(x => x.Contains(value: "IL_", StringComparison.InvariantCulture))
+                .Select(x =>
+                {
+                    x = x.Remove(startIndex: 0, count: 14);
+
+                    if (x.Contains(' ', StringComparison.InvariantCulture))
+                    {
+                        var strs = x.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        x = strs[0];
+                    }
+
+                    return x;
+                });
+            var cleansedAnalyzedPath = DecompiledAnalyzed.FullName.Replace(oldValue: ".il", newValue: "_cls.txt", StringComparison.InvariantCulture);
+            File.WriteAllLines(path: cleansedAnalyzedPath, selectedRAnalyzedLines, Encoding.UTF8);
+            CleansedAnalyzed = new FileInfo(fileName: cleansedAnalyzedPath);
         }
 
         private void GenerateIL()
@@ -50,6 +106,7 @@ namespace SimiSharp.Core
             ildasm.CreateNoWindow = true;
             var process = Process.Start(ildasm);
             process.WaitForExit();
+            DecompiledReference = new FileInfo(fileName: decompiledReferencePath);
 
 
             var decompiledAnalyzedPath = Path.Combine(path1: DecompiledDirectory.FullName,
@@ -58,6 +115,7 @@ namespace SimiSharp.Core
             ildasm = new ProcessStartInfo(fileName: ildasmPath, arguments: string.Join(separator: ' ', AnalyzedBinary.FullName, $"/out:\"{decompiledAnalyzedPath}\"", "/utf8"));
             process = Process.Start(ildasm);
             process.WaitForExit();
+            DecompiledAnalyzed = new FileInfo(fileName: decompiledAnalyzedPath);
             process.Dispose();
         }
 

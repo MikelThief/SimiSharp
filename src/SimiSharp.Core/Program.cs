@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using PowerArgs;
@@ -26,6 +27,8 @@ namespace SimiSharp.Core
         private DirectoryInfo DecompiledDirectory { get; set; }
         private FileInfo ReferenceBinary { get; set; }
         private FileInfo AnalyzedBinary { get; set; }
+        private FileInfo DecompiledReference { get; set; }
+        private FileInfo DecompiledAnalyzed { get; set; }
 
         /// <summary>
         /// EntryPoint
@@ -34,6 +37,28 @@ namespace SimiSharp.Core
         {
             CreateWorkspace();
             CompileFiles();
+            GenerateIL();
+        }
+
+        private void GenerateIL()
+        {
+            var ildasmPath = Path.Combine(path1: Directory.GetCurrentDirectory(), path2: "Tools", path3: "ildasm.exe");
+            var decompiledReferencePath = Path.Combine(path1: DecompiledDirectory.FullName,
+                path2: Path.GetFileNameWithoutExtension(ReferenceBinary.FullName) + ".il");
+            var ildasm = new ProcessStartInfo(fileName: ildasmPath, arguments: string.Join(separator: ' ', ReferenceBinary.FullName , $"/out:\"{decompiledReferencePath}\"", "/utf8"));
+            ildasm.WindowStyle = ProcessWindowStyle.Hidden;
+            ildasm.CreateNoWindow = true;
+            var process = Process.Start(ildasm);
+            process.WaitForExit();
+
+
+            var decompiledAnalyzedPath = Path.Combine(path1: DecompiledDirectory.FullName,
+                path2: Path.GetFileNameWithoutExtension(AnalyzedBinary.FullName) + ".il");
+
+            ildasm = new ProcessStartInfo(fileName: ildasmPath, arguments: string.Join(separator: ' ', AnalyzedBinary.FullName, $"/out:\"{decompiledAnalyzedPath}\"", "/utf8"));
+            process = Process.Start(ildasm);
+            process.WaitForExit();
+            process.Dispose();
         }
 
         private void CompileFiles()
@@ -52,10 +77,10 @@ namespace SimiSharp.Core
             ReferenceBinary = new FileInfo(fileName: referenceCompileResult.PathToDll);
 
             var analyzedBinaryOutputPath = Path.Combine(path1: CompiledDirectory.FullName,
-                path2: Path.GetFileNameWithoutExtension(InputReferenceFilePath.FullName)) + ".dll";
+                path2: Path.GetFileNameWithoutExtension(InputAnalyzedFilePath.FullName)) + ".dll";
             var analyzedCompileResult = compiler.CompileFilesAsync(
                 outputPath: analyzedBinaryOutputPath,
-                pathsToCsFiles: InputReferenceFilePath.FullName).ConfigureAwait(false).GetAwaiter().GetResult();
+                pathsToCsFiles: InputAnalyzedFilePath.FullName).ConfigureAwait(false).GetAwaiter().GetResult();
             if (!analyzedCompileResult.Success)
             {
                 // TODO: Fail
@@ -66,7 +91,7 @@ namespace SimiSharp.Core
 
         private void CreateWorkspace()
         {
-            var currentDir = new DirectoryInfo(path: Environment.CurrentDirectory);
+            var currentDir = new DirectoryInfo(path: Directory.GetCurrentDirectory());
             var workspacePath = Path.Combine(path1: currentDir.FullName, path2: "Workspace");
 
             if(Directory.Exists(path: workspacePath))

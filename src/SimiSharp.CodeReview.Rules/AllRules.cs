@@ -22,10 +22,9 @@ namespace SimiSharp.CodeReview.Rules
 	{
 		public static IEnumerable<ISyntaxEvaluation> GetSyntaxRules(ISpellChecker spellChecker)
 		{
-			var types = (from type in typeof(AllRules).Assembly.GetTypes()
-						 where typeof(ISyntaxEvaluation).IsAssignableFrom(c: type)
-						 where !type.IsInterface && !type.IsAbstract
-						 select type).AsArray();
+			var types = (typeof(AllRules).Assembly.GetTypes()
+				.Where(type => typeof(ISyntaxEvaluation).IsAssignableFrom(c: type))
+				.Where(type => !type.IsInterface && !type.IsAbstract)).AsArray();
 			var simple =
 				types.Where(predicate: x => x.GetConstructors().Any(predicate: c => c.GetParameters().Length == 0))
 					.Select(selector: Activator.CreateInstance)
@@ -44,10 +43,9 @@ namespace SimiSharp.CodeReview.Rules
 
 		public static IEnumerable<ISymbolEvaluation> GetSymbolRules()
 		{
-			var types = from type in typeof(AllRules).Assembly.GetTypes()
-				   where typeof(ISymbolEvaluation).IsAssignableFrom(c: type)
-				   where !type.IsInterface && !type.IsAbstract
-				   select type;
+			var types = typeof(AllRules).Assembly.GetTypes()
+				.Where(type => typeof(ISymbolEvaluation).IsAssignableFrom(c: type))
+				.Where(type => !type.IsInterface && !type.IsAbstract);
 
 			var simple =
 				types.Where(predicate: x => x.GetConstructors().Any(predicate: c => c.GetParameters().Length == 0))

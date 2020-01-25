@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SimiSharp.Core": {
+      "commandName": "Project",
+      "commandLineArgs": "-r \"C:\\Users\\mbato\\Desktop\\test.txt\""
+    }
+  }
+}

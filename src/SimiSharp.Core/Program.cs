@@ -2,11 +2,13 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using F23.StringSimilarity;
 using PowerArgs;
 using Testura.Code.Compilations;
+using JaroWinkler = F23.StringSimilarity.JaroWinkler;
 
 namespace SimiSharp.Core
 {
@@ -52,8 +54,12 @@ namespace SimiSharp.Core
             var reference = string.Join(separator: ' ', File.ReadAllLines(path: CleansedReference.FullName));
             var analyzed = string.Join(separator: ' ', File.ReadAllLines(path: CleansedAnalyzed.FullName));
 
-            var damerau = new JaroWinkler(0.01);
-            var l = 1 - damerau.Distance(s1: reference, s2: analyzed);
+            var jaroWinkler = new JaroWinkler(0.7).Similarity(s1: reference, s2: analyzed);
+            var levenshtein = new NormalizedLevenshtein().Similarity(s1: reference, s2: analyzed);
+            var cosine = new Cosine(k: 6).Similarity(s1: reference, s2: analyzed);
+            var jaccard = new Jaccard(k: 6).Similarity(s1: reference, s2: analyzed);
+            var soresenDice = new SorensenDice(k: 5).Similarity(s1: reference, s2: analyzed);
+
         }
 
         private void CleanseIL()

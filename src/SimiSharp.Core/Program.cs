@@ -71,8 +71,8 @@ namespace SimiSharp.Core
                     AutoPosition = true,
                     Children =
                     {
-                        new Cell("Metric") { Stroke = new LineThickness(LineWidth.Double, LineWidth.Single)},
-                        new Cell("Value") { Stroke = new LineThickness(LineWidth.Double, LineWidth.Single)},
+                        new Cell("Metric") {Margin = new Thickness(1,0,1,0), Stroke = new LineThickness(LineWidth.Double, LineWidth.Single), Background = ConsoleColor.DarkBlue, Color = ConsoleColor.Cyan},
+                        new Cell("Value") {Margin = new Thickness(1,0,1,0), Stroke = new LineThickness(LineWidth.Double, LineWidth.Single), Background = ConsoleColor.DarkBlue, Color = ConsoleColor.Cyan},
 
                         new Cell("Jaro-Winkler:") {Margin = new Thickness(1,0,1,0)}, new Cell((jaroWinkler*100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
                         new Cell("Normalized Levenshtein:") {Margin = new Thickness(1,0,1,0)}, new Cell((levenshtein*100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},

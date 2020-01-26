@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Alba.CsConsoleFormat" Version="1.0.0" />
+    <PackageReference Include="Alba.CsConsoleFormat.ColorfulConsole-NoXaml" Version="1.0.0" />
     <PackageReference Include="F23.StringSimilarity" Version="3.1.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8">
       <PrivateAssets>all</PrivateAssets>

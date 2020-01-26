@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Alba.CsConsoleFormat;
 using F23.StringSimilarity;
 using PowerArgs;
 using Testura.Code.Compilations;
@@ -54,11 +55,37 @@ namespace SimiSharp.Core
             var reference = string.Join(separator: ' ', File.ReadAllLines(path: CleansedReference.FullName));
             var analyzed = string.Join(separator: ' ', File.ReadAllLines(path: CleansedAnalyzed.FullName));
 
+            int kShing = 4;
             var jaroWinkler = new JaroWinkler(0.7).Similarity(s1: reference, s2: analyzed);
             var levenshtein = new NormalizedLevenshtein().Similarity(s1: reference, s2: analyzed);
-            var cosine = new Cosine(k: 6).Similarity(s1: reference, s2: analyzed);
-            var jaccard = new Jaccard(k: 6).Similarity(s1: reference, s2: analyzed);
-            var soresenDice = new SorensenDice(k: 5).Similarity(s1: reference, s2: analyzed);
+            var cosine = new Cosine(k: kShing).Similarity(s1: reference, s2: analyzed);
+            var jaccard = new Jaccard(k: kShing).Similarity(s1: reference, s2: analyzed);
+            var soresenDice = new SorensenDice(k: kShing).Similarity(s1: reference, s2: analyzed);
+
+            var document = new Document(
+            new Span(text: "Analysis report"), "\n",
+            new Grid
+                {
+                    Color = ConsoleColor.Gray,
+                    Columns = { GridLength.Auto, GridLength.Auto },
+                    AutoPosition = true,
+                    Children =
+                    {
+                        new Cell("Metric") { Stroke = new LineThickness(LineWidth.Double, LineWidth.Single)},
+                        new Cell("Value") { Stroke = new LineThickness(LineWidth.Double, LineWidth.Single)},
+
+                        new Cell("Jaro-Winkler:") {Margin = new Thickness(1,0,1,0)}, new Cell((jaroWinkler*100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+                        new Cell("Normalized Levenshtein:") {Margin = new Thickness(1,0,1,0)}, new Cell((levenshtein*100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+                        new Cell($"Cosine ({kShing}):") { Color = ConsoleColor.Yellow, Margin = new Thickness(1,0,1,0)}, new Cell((cosine * 100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+                        new Cell($"Jaccard Index ({kShing}):") { Color = ConsoleColor.Yellow, Margin = new Thickness(1,0,1,0)}, new Cell((jaccard * 100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+                        new Cell($"Soresen Dice ({kShing}):") { Color = ConsoleColor.Yellow, Margin = new Thickness(1,0,1,0)}, new Cell((soresenDice * 100).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+
+                        new Cell("Average:") {Margin = new Thickness(1,0,1,0)}, new Cell(((jaroWinkler+levenshtein+cosine+jaccard+soresenDice)*100/5).ToString("N2") + " %") {Margin = new Thickness(1,0,1,0)},
+                    }
+                }
+            );
+
+            ConsoleRenderer.RenderDocument(document: document);
 
         }
 
